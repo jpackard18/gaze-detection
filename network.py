@@ -146,10 +146,13 @@ class Network(object):
     def cost_derivative(output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
         \partial a for the output activations."""
+        y_alt = []
         for val in y:
             if(val == 0):
                 val = 0.5
-        return output_activations-y
+            y_alt.append(val)
+        # return output_activations-y
+        return output_activations-y_alt
 
 
 # Miscellaneous functions

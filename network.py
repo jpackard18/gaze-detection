@@ -139,7 +139,6 @@ class Network(object):
                                     for network_output, expected_output in vertical_results)]
         num_horizontal_correct = [sum(int(np.argmax(network_output) == np.argmax(expected_output))
                                       for network_output, expected_output in horizontal_results)]
-        print(test_results)
         return num_vertical_correct, num_horizontal_correct
 
     @staticmethod
@@ -161,8 +160,9 @@ def sigmoid_prime(z):
 
 
 if __name__ == "__main__":
-    net = Network([2048, 260, 100, 8])
+    net = Network([2048, 420, 8])
     training_data = load('training_data.pkl')
-    num_test = 500
+    random.shuffle(training_data)
+    num_test = 100
     net.SGD(training_data[:-num_test], 30, 10, 3.0, test_data=training_data[-num_test:])
     pdb.set_trace()

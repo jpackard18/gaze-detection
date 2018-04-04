@@ -29,10 +29,10 @@ class InputImage:
         # cv2.imshow("Eye 2", eyes[1])
         # cv2.waitKey()
         converted_eyes = zeros((2048, 1))
-        for eye in eyes:
-            for x in range(eye.shape[0]):
-                for y in range(eye.shape[1]):
-                    converted_eyes[x*y] = eye[x][y] / 255.0
+        for i in range(2):
+            for x in range(eyes[i].shape[0]):
+                for y in range(eyes[i].shape[1]):
+                    converted_eyes[x*y + i*1024] = eyes[i][x][y] / 255.0
         return converted_eyes
 
 

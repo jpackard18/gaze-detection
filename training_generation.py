@@ -1,14 +1,16 @@
 import os
 import argparse
 import cv2
+import numpy as np
 from numpy import zeros
 from eye_detection import grab_eyes
 from array import vectorized_result
 from data_loader import save
+from datetime import datetime
 from multiprocessing import Process, Queue
 
 
-NUM_CPU_CORES = 12
+NUM_CPU_CORES = 1
 
 
 class InputImage:
@@ -25,9 +27,19 @@ class InputImage:
         eyes = grab_eyes(img)
         if len(eyes) != 2:
             return None
-        # cv2.imshow("Eye 1", eyes[0])
-        # cv2.imshow("Eye 2", eyes[1])
-        # cv2.waitKey()
+        inv = []
+        inv.append(255-eyes[0])
+        inv.append(255-eyes[1])
+        eyes[0][eyes[0] == 0] = 1
+        eyes[1][eyes[1] == 0] = 1
+        # draw an ellipse that covers the pixels outside 15 pixels from center horizontally
+        # and outside 11 pixels from center vertically
+        # cv2.ellipse(ResultImage, (centerX,centerY), (width,height), startAngle, endAngle, angle, color, lineThickness)
+        cv2.ellipse(eyes[0], (15,15), (26,21), 0, 0, 360, 0, 20)
+        cv2.ellipse(eyes[1], (15,15), (26,21), 0, 0, 360, 0, 20)
+        cv2.imshow("Eye 1", eyes[0])
+        cv2.imshow("Eye 2", eyes[1])
+        cv2.waitKey()
         converted_eyes = zeros((2048, 1))
         for i in range(2):
             for x in range(eyes[i].shape[0]):
@@ -86,7 +98,9 @@ def create_training_data(gaze_set_path, output_file_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("gaze_path", help="Full path of the Columbia Gaze Data Set")
-    parser.add_argument("output_file", help="Training Data Output File Path")
+    parser.add_argument("--gaze_path", help="Full path of the Columbia Gaze Data Set", default="/Users/lol/Downloads/Columbia Gaze Data Set")
+    parser.add_argument("--output_file", help="Training Data Output File Path", default="training_{}.pkl".format(datetime.now().isoformat()))
     args = parser.parse_args()
+    print(args.gaze_path)
+    print(args.output_file)
     create_training_data(args.gaze_path, args.output_file)

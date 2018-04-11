@@ -1,10 +1,9 @@
 import os
 import argparse
 import cv2
-import numpy as np
 from numpy import zeros
 from eye_detection import grab_eyes
-from array import vectorized_result
+from array import vectorized_result, vectorized_result_2
 from data_loader import save
 from datetime import datetime
 from multiprocessing import Process, Queue
@@ -48,7 +47,7 @@ class InputImage:
         return converted_eyes
 
 
-def process_image_list(image_list, queue, worker_index):
+def process_image_list(image_list, queue, worker_index, is_v2=False):
     results = []
     # start with work index and skip the number of CPU cores
     for i in range(worker_index, len(image_list), NUM_CPU_CORES):
@@ -58,15 +57,16 @@ def process_image_list(image_list, queue, worker_index):
             if eyes is None:
                 print("Could not locate two eyes in the frame >.( \tfile: {}".format(inp.path))
                 continue
-            results.append(
-                (eyes,
-                 vectorized_result(inp.vertical, inp.horizontal))
-            )
+            if is_v2:
+                vr = vectorized_result_2(inp.vertical, inp.horizontal)
+            else:
+                vr = vectorized_result(inp.vertical, inp.horizontal)
+            results.append((eyes, vr))
             print("Progress: {}%".format(round(i / len(image_list) * 100)))
     queue.put(results)
 
 
-def create_training_data(gaze_set_path, output_file_path):
+def create_training_data(gaze_set_path, output_file_path, is_v2=False):
     training_data = []
     input_images = []
     for dirpath, dirnames, filenames in os.walk(gaze_set_path):
@@ -83,7 +83,7 @@ def create_training_data(gaze_set_path, output_file_path):
     queue = Queue(NUM_CPU_CORES)
     for core in range(NUM_CPU_CORES):
         # p = Process(target=process_image_list, args=(input_images[:4], queue, core))
-        p = Process(target=process_image_list, args=(input_images, queue, core))
+        p = Process(target=process_image_list, args=(input_images, queue, core, is_v2))
         p.start()
         processes.append(p)
     print("Done with appending processes")
@@ -100,7 +100,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gaze_path", help="Full path of the Columbia Gaze Data Set", default="/Users/lol/Downloads/Columbia Gaze Data Set")
     parser.add_argument("--output_file", help="Training Data Output File Path", default="training_{}.pkl".format(datetime.now().isoformat()))
+    parser.add_argument("--is_v2", help="v2 is the training data with only one output neuron. Do you want this? (yes/no)", default="no")
     args = parser.parse_args()
+    if args.is_v2 == "yes":
+        args.output_file += args.output_file.rstrip('.pkl') + "--v2.pkl"
+        is_v2 = True
+    elif args.is_v2 == "no":
+        is_v2 = False
+    else:
+        print("unknown input for --is_v2, setting to false...")
+        is_v2 = False
     print(args.gaze_path)
     print(args.output_file)
-    create_training_data(args.gaze_path, args.output_file)
+    print(is_v2)
+    create_training_data(args.gaze_path, args.output_file, is_v2)

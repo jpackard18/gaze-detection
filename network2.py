@@ -104,8 +104,6 @@ class Network(object):
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
             sigmoid_prime(zs[-1])
-        if random.random() < 0.005:
-            print(self.cost_derivative(activations[-1], y))
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -139,7 +137,7 @@ class Network(object):
             expected_gaze = round(expected[0][0])
             # output from the network, should be <0.5 if not gazing and >= 0.5 if gazing at camera
             neuro_gaze = round(self.feedforward(image)[0][0])
-            num_correct += int(neuro_gaze == expected_gaze and round(expected_gaze) == 1)
+            num_correct += int(neuro_gaze == expected_gaze)
         return num_correct
         # d = [(round(self.feedforward(image)[0][0]), round(expected[0][0])) for image, expected in test_data]
 
@@ -163,11 +161,29 @@ def sigmoid_prime(z):
 
 
 if __name__ == "__main__":
-    net = Network([2048, 200, 5, 1])
+    net = Network([2048, 200, 1])
     training_data = load('training_2018-04-12T11:46:57.524755-v2.pkl')
+    # have 50% of images not gazing
+    training_data_edited = []
+    random.shuffle(training_data_edited)
+    count_not_gazing = 0
+    for image in training_data:
+        if (image[1] == 1):
+            training_data_edited.append(image)
+        # we want the number of not gazing images to be the same as gazing (640)
+        elif (image[1] == 0 and count_not_gazing < 640):
+            training_data_edited.append(image)
+            count_not_gazing += 1
+
+    print(str(sum([int(round(output[0][0]) == 1) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
+    print(str(sum([int(round(output[0][0]) == 0) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
     # pdb.set_trace()
-    random.shuffle(training_data)
-    print(str(sum([int(round(output[0][0]) == 1) for _, output in training_data])) + " / " + str(len(training_data)))
-    num_test = 500
-    net.SGD(training_data[:-num_test], 30, 20, 0.01, test_data=training_data[-num_test:])
+    num_test = 300
+    # ended at around 850 correct (epoch 230), 66%, with 200 neurons and 0.01 learning rate
+    # ended at around 1000 correct (epoch 110), with 200 neurons and 0.08 learning rate
+    # ended at around 1070 correct (epoch 150), with 200 neurons and 0.08 learning rate
+    # ended at around 1090 correct (epoch 170), with 200 neurons and 0.08 learning rate
+    # ended at around 1130 correct (epoch 210), with 200 neurons and 0.08 learning rate
+    # ended at around 1150 correct (epoch 240), with 200 neurons and 0.08 learning rate
+    net.SGD(training_data_edited, 300, 10, 0.08, test_data=training_data_edited)
     pdb.set_trace()

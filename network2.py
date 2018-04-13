@@ -13,6 +13,7 @@ and omits many desirable features.
 # Standard library
 import random
 from data_loader import load
+import sys
 import pdb
 
 # Third-party libraries
@@ -61,9 +62,8 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
-                v, h = self.evaluate(test_data)
-                print("Epoch {0}:\nHorizontal: {1} / {2}\nVertical: {3} / {4}".format(
-                    j, h, n_test, v, n_test))
+                n_correct = self.evaluate(test_data)
+                print("Epoch {0}:\n{1} / {2}".format(j, n_correct, n_test))
             else:
                 print("Epoch {0} complete".format(j))
 
@@ -104,6 +104,8 @@ class Network(object):
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
             sigmoid_prime(zs[-1])
+        if random.random() < 0.005:
+            print(self.cost_derivative(activations[-1], y))
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -129,17 +131,18 @@ class Network(object):
         network outputs the correct result. Note that the neural
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
-        test_results = [(np.split(self.feedforward(image), [3, 8]), np.split(expected_output, [3, 8]))
-                        for image, expected_output in test_data]
-        vertical_results = [(network_output[0], expected_output[0])
-                            for network_output, expected_output in test_results]
-        horizontal_results = [(network_output[1], expected_output[1])
-                              for network_output, expected_output in test_results]
-        num_vertical_correct = [sum(int(np.argmax(network_output) == np.argmax(expected_output))
-                                    for network_output, expected_output in vertical_results)]
-        num_horizontal_correct = [sum(int(np.argmax(network_output) == np.argmax(expected_output))
-                                      for network_output, expected_output in horizontal_results)]
-        return num_vertical_correct, num_horizontal_correct
+        # return sum(int((round(self.feedforward(image)[0][0]) == 1) == int(expected[0][0]))
+        #            for image, expected in test_data)
+        num_correct = 0
+        for image, expected in test_data:
+            # should be 0 if not gazing and 1 if gazing at camera
+            expected_gaze = round(expected[0][0])
+            # output from the network, should be <0.5 if not gazing and >= 0.5 if gazing at camera
+            neuro_gaze = round(self.feedforward(image)[0][0])
+            num_correct += int(neuro_gaze == expected_gaze and round(expected_gaze) == 1)
+        return num_correct
+        # d = [(round(self.feedforward(image)[0][0]), round(expected[0][0])) for image, expected in test_data]
+
 
     @staticmethod
     def cost_derivative(output_activations, y):
@@ -160,9 +163,11 @@ def sigmoid_prime(z):
 
 
 if __name__ == "__main__":
-    net = Network([2048, 300, 1])
-    training_data = load('training_data.pkl')
+    net = Network([2048, 200, 5, 1])
+    training_data = load('training_2018-04-12T11:46:57.524755-v2.pkl')
+    # pdb.set_trace()
     random.shuffle(training_data)
-    num_test = 100
-    net.SGD(training_data[:-num_test], 30, 10, 3.0, test_data=training_data[-num_test:])
+    print(str(sum([int(round(output[0][0]) == 1) for _, output in training_data])) + " / " + str(len(training_data)))
+    num_test = 500
+    net.SGD(training_data[:-num_test], 30, 20, 0.01, test_data=training_data[-num_test:])
     pdb.set_trace()

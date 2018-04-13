@@ -1,7 +1,7 @@
 import os
 import argparse
 import cv2
-from numpy import zeros
+import numpy as np
 from eye_detection import grab_eyes
 from array import vectorized_result, vectorized_result_2
 from data_loader import save
@@ -9,7 +9,7 @@ from datetime import datetime
 from multiprocessing import Process, Queue
 
 
-NUM_CPU_CORES = 1
+NUM_CPU_CORES = 4
 
 
 class InputImage:
@@ -26,9 +26,7 @@ class InputImage:
         eyes = grab_eyes(img)
         if len(eyes) != 2:
             return None
-        inv = []
-        inv.append(255-eyes[0])
-        inv.append(255-eyes[1])
+        # make black pixels grey in prior so we can tell them apart from the black ellipse mask
         eyes[0][eyes[0] == 0] = 1
         eyes[1][eyes[1] == 0] = 1
         # draw an ellipse that covers the pixels outside 15 pixels from center horizontally
@@ -36,15 +34,18 @@ class InputImage:
         # cv2.ellipse(ResultImage, (centerX,centerY), (width,height), startAngle, endAngle, angle, color, lineThickness)
         cv2.ellipse(eyes[0], (15,15), (26,21), 0, 0, 360, 0, 20)
         cv2.ellipse(eyes[1], (15,15), (26,21), 0, 0, 360, 0, 20)
-        cv2.imshow("Eye 1", eyes[0])
-        cv2.imshow("Eye 2", eyes[1])
-        cv2.waitKey()
-        converted_eyes = zeros((2048, 1))
-        for i in range(2):
-            for x in range(eyes[i].shape[0]):
-                for y in range(eyes[i].shape[1]):
-                    converted_eyes[x*y + i*1024] = eyes[i][x][y] / 255.0
-        return converted_eyes
+        # cv2.imshow("Eye 1", eyes[0])
+        # cv2.imshow("Eye 2", eyes[1])
+        # cv2.waitKey()
+        # flatten the eyes and combine them into one vertical array of pixels
+        converted_eyes = np.append(eyes[0].flatten(), eyes[1].flatten()).reshape((2048, 1))
+        return np.true_divide(converted_eyes, 255.0)
+        # print(len(converted_eyes[converted_eyes != 0]))
+        # for i in range(2):
+        #     for x in range(eyes[i].shape[0]):
+        #         for y in range(eyes[i].shape[1]):
+        #             converted_eyes[x*y + i*1024] = eyes[i][x][y] / 255.0
+        # return converted_eyes
 
 
 def process_image_list(image_list, queue, worker_index, is_v2=False):
@@ -98,14 +99,17 @@ def create_training_data(gaze_set_path, output_file_path, is_v2=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gaze_path", help="Full path of the Columbia Gaze Data Set", default="/Users/lol/Downloads/Columbia Gaze Data Set")
-    parser.add_argument("--output_file", help="Training Data Output File Path", default="training_{}.pkl".format(datetime.now().isoformat()))
-    parser.add_argument("--is_v2", help="v2 is the training data with only one output neuron. Do you want this? (yes/no)", default="no")
+    parser.add_argument("--gaze_path", help="Full path of the Columbia Gaze Data Set",
+                        default="/Users/lol/Downloads/Columbia Gaze Data Set")
+    parser.add_argument("--output_file", help="Training Data Output File Path",
+                        default="training_{}.pkl".format(datetime.now().isoformat()))
+    parser.add_argument("--v2", help="v2 is the training data with only one output neuron. Do you want this? (yes/no)",
+                        default="no")
     args = parser.parse_args()
-    if args.is_v2 == "yes":
-        args.output_file += args.output_file.rstrip('.pkl') + "--v2.pkl"
+    if args.v2 == "yes":
+        args.output_file = args.output_file.rstrip('.pkl') + "-v2.pkl"
         is_v2 = True
-    elif args.is_v2 == "no":
+    elif args.v2 == "no":
         is_v2 = False
     else:
         print("unknown input for --is_v2, setting to false...")

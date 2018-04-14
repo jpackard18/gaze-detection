@@ -162,7 +162,7 @@ def sigmoid_prime(z):
 
 if __name__ == "__main__":
     net = Network([2048, 200, 1])
-    training_data = load('training_2018-04-12T11:46:57.524755-v2.pkl')
+    training_data = load('training_data_v2.pkl')
     # have 50% of images not gazing
     training_data_edited = []
     random.shuffle(training_data_edited)

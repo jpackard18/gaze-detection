@@ -175,7 +175,9 @@ if __name__ == "__main__":
             training_data_edited.append(image)
             count_not_gazing += 1
 
+    print("Num pictures gazing:")
     print(str(sum([int(round(output[0][0]) == 1) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
+    print("Num pictures not gazing:")
     print(str(sum([int(round(output[0][0]) == 0) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
     # pdb.set_trace()
     num_test = 300

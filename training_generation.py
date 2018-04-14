@@ -3,7 +3,7 @@ import argparse
 import cv2
 import numpy as np
 from eye_detection import grab_eyes
-from array import vectorized_result, vectorized_result_2
+from output_vectorization import vectorized_result, vectorized_result_2
 from data_loader import save
 from datetime import datetime
 from multiprocessing import Process, Queue

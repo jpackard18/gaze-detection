@@ -161,7 +161,7 @@ def sigmoid_prime(z):
 
 
 if __name__ == "__main__":
-    net = Network([2048, 200, 1])
+    net = Network([2048, 100, 4, 1])
     training_data = load('training_data_v2.pkl')
     # have 50% of images not gazing
     training_data_edited = []
@@ -174,18 +174,12 @@ if __name__ == "__main__":
         elif (image[1] == 0 and count_not_gazing < 640):
             training_data_edited.append(image)
             count_not_gazing += 1
-
+    random.shuffle(training_data_edited)
     print("Num pictures gazing:")
     print(str(sum([int(round(output[0][0]) == 1) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
     print("Num pictures not gazing:")
     print(str(sum([int(round(output[0][0]) == 0) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
     # pdb.set_trace()
     num_test = 300
-    # ended at around 850 correct (epoch 230), 66%, with 200 neurons and 0.01 learning rate
-    # ended at around 1000 correct (epoch 110), with 200 neurons and 0.08 learning rate
-    # ended at around 1070 correct (epoch 150), with 200 neurons and 0.08 learning rate
-    # ended at around 1090 correct (epoch 170), with 200 neurons and 0.08 learning rate
-    # ended at around 1130 correct (epoch 210), with 200 neurons and 0.08 learning rate
-    # ended at around 1150 correct (epoch 240), with 200 neurons and 0.08 learning rate
-    net.SGD(training_data_edited, 300, 10, 0.08, test_data=training_data_edited)
+    net.SGD(training_data_edited[0:-num_test], 300, 10, 1, test_data=training_data_edited[-num_test:])
     pdb.set_trace()

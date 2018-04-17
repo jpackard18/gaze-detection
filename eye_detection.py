@@ -45,6 +45,7 @@ def grab_eyes(img):
     if len(eyes_rect) < 2:
         return []
     eyes = []
+    eyes_rect = sorted(eyes_rect, key=lambda rect: rect.x)
     for eye_rect in eyes_rect:
         x = eye_rect.x
         y = eye_rect.y

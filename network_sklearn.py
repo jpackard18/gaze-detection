@@ -30,11 +30,11 @@ print("Num pictures gazing:")
 print(str(len(expected[expected==1])) + " / " + str(len(expected)))
 print("Num pictures not gazing:")
 print(str(len(expected[expected==0])) + " / " + str(len(expected)))
-num_test = 300
+num_test = 100
 # Create a classifier: a support vector classifier
 classifier = svm.SVC(gamma='auto')
 # Learns to fit traning images to results (wether or not user is gazing)
-classifier.fit(images[:-300], expected[:-300])
+classifier.fit(images[:-num_test], expected[:-num_test])
 # Now predict the values of the testing images:
 predicted = classifier.predict(images[-num_test:])
 
@@ -46,5 +46,5 @@ for i in range(len(predicted)):
 print("Num correct: " + str(num_correct))
 
 print(images[-1].reshape(32,64))
-plt.imshow(images[-1].reshape(32,64), cmap=plt.cm.gray_r, interpolation='nearest')
+plt.imshow(images[-1].reshape(32,64), cmap=plt.cm.gray, interpolation='nearest')
 plt.show()

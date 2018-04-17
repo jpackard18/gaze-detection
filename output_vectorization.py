@@ -18,7 +18,8 @@ def vectorized_result(v, h):
 
 def vectorized_result_2(v, h):
     vm = np.zeros((1, 1))
-    if abs(v) <= 5 and h == 0:
+    if abs(h) <= 5 and v == 0:
         vm[0] = 1
     else:
         vm[0] = 0
+    return vm

@@ -8,7 +8,7 @@ from data_loader import save
 from datetime import datetime
 from multiprocessing import Process, Queue
 
-
+# enter in the number of physical cores here (it's generally enough)
 NUM_CPU_CORES = 4
 
 
@@ -37,16 +37,9 @@ class InputImage:
         # cv2.imshow("Eye 1", eyes[0])
         # cv2.imshow("Eye 2", eyes[1])
         # cv2.waitKey()
-        # flatten the eyes and combine them into one vertical array of pixels
-        converted_eyes = np.append(eyes[0].flatten(), eyes[1].flatten()).reshape((2048, 1))
+        # combine the eyes horizontally from left eye to right eye
+        converted_eyes = np.append(eyes[0], eyes[1], axis=1).reshape(2048, 1)
         return np.true_divide(converted_eyes, 255.0)
-        # print(len(converted_eyes[converted_eyes != 0]))
-        # for i in range(2):
-        #     for x in range(eyes[i].shape[0]):
-        #         for y in range(eyes[i].shape[1]):
-        #             converted_eyes[x*y + i*1024] = eyes[i][x][y] / 255.0
-        # return converted_eyes
-
 
 def process_image_list(image_list, queue, worker_index, is_v2=False):
     results = []
@@ -79,11 +72,10 @@ def create_training_data(gaze_set_path, output_file_path, is_v2=False):
             if abs(input_image.horizontal) == 15:
                 continue
             input_images.append(input_image)
-    print(len(input_images))
+    print("Found " + str(len(input_images)) + " images.")
     processes = []
     queue = Queue(NUM_CPU_CORES)
     for core in range(NUM_CPU_CORES):
-        # p = Process(target=process_image_list, args=(input_images[:4], queue, core))
         p = Process(target=process_image_list, args=(input_images, queue, core, is_v2))
         p.start()
         processes.append(p)

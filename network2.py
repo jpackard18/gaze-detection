@@ -161,7 +161,7 @@ def sigmoid_prime(z):
 
 
 if __name__ == "__main__":
-    net = Network([2048, 100, 4, 1])
+    net = Network([2048, 200, 4, 1])
     training_data = load('training_data_v2.pkl')
     # have 50% of images not gazing
     training_data_edited = []

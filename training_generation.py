@@ -1,7 +1,7 @@
 import os
 import argparse
-import cv2
 import numpy as np
+import cv2
 from eye_detection import grab_eyes
 from output_vectorization import vectorized_result, vectorized_result_2
 from data_loader import save
@@ -9,7 +9,7 @@ from datetime import datetime
 from multiprocessing import Process, Queue
 
 # enter in the number of physical cores here (it's generally enough)
-NUM_CPU_CORES = 4
+NUM_CPU_CORES = 6
 
 
 class InputImage:
@@ -34,9 +34,6 @@ class InputImage:
         # cv2.ellipse(ResultImage, (centerX,centerY), (width,height), startAngle, endAngle, angle, color, lineThickness)
         cv2.ellipse(eyes[0], (15,15), (26,21), 0, 0, 360, 0, 20)
         cv2.ellipse(eyes[1], (15,15), (26,21), 0, 0, 360, 0, 20)
-        # cv2.imshow("Eye 1", eyes[0])
-        # cv2.imshow("Eye 2", eyes[1])
-        # cv2.waitKey()
         # combine the eyes horizontally from left eye to right eye
         converted_eyes = np.append(eyes[0], eyes[1], axis=1).reshape(2048, 1)
         return np.true_divide(converted_eyes, 255.0)
@@ -76,6 +73,7 @@ def create_training_data(gaze_set_path, output_file_path, is_v2=False):
     processes = []
     queue = Queue(NUM_CPU_CORES)
     for core in range(NUM_CPU_CORES):
+        # process_image_list(input_images, queue, core, is_v2)
         p = Process(target=process_image_list, args=(input_images, queue, core, is_v2))
         p.start()
         processes.append(p)
@@ -94,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument("--gaze_path", help="Full path of the Columbia Gaze Data Set",
                         default="/Users/lol/Downloads/Columbia Gaze Data Set")
     parser.add_argument("--output_file", help="Training Data Output File Path",
-                        default="training_{}.pkl".format(datetime.now().isoformat()))
+                        default="training_{}.pkl".format(datetime.now().strftime("%Y%m%d_%H%M")))
     parser.add_argument("--v2", help="v2 is the training data with only one output neuron. Do you want this? (yes/no)",
                         default="no")
     args = parser.parse_args()

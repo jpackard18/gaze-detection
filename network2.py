@@ -12,9 +12,7 @@ and omits many desirable features.
 #### Libraries
 # Standard library
 import random
-from data_loader import load
-import sys
-import pdb
+from data_loader import *
 
 # Third-party libraries
 import numpy as np
@@ -181,5 +179,5 @@ if __name__ == "__main__":
     print(str(sum([int(round(output[0][0]) == 0) for _, output in training_data_edited])) + " / " + str(len(training_data_edited)))
     # pdb.set_trace()
     num_test = 300
-    net.SGD(training_data_edited[0:-num_test], 300, 10, 1, test_data=training_data_edited[-num_test:])
-    pdb.set_trace()
+    # net.SGD(training_data_edited[0:-num_test], 300, 10, 1, test_data=training_data_edited[-num_test:])
+    save({'weights': net.weights, 'biases': net.biases}, 'output_network.pkl')

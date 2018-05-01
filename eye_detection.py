@@ -36,11 +36,12 @@ def detect_eyes(img, draw_rects=False):
             eyes_rect.append(Eye(ex + x, ey + y, ew, eh))
             if draw_rects:
                 cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
-    return gray, eyes_rect
+    return img, eyes_rect
 
 
 def grab_eyes(img):
-    gray, eyes_rect = detect_eyes(img)
+    img, eyes_rect = detect_eyes(img)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # cv2.imshow("eye", img)
     if len(eyes_rect) < 2:
         return []
@@ -57,6 +58,12 @@ def grab_eyes(img):
     # cv2.imshow("Example 2", eyes[1])
     # cv2.waitKey(0)
     return eyes
+
+
+def grab_faces(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = FACE_CASCADE.detectMultiScale(gray, 1.2, 5)
+    return faces
 
 
 # img = cv2.imread("images/0001_2m_-15P_-10V_-5H.jpg")

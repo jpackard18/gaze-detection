@@ -113,7 +113,6 @@ class VideoWindow(QMainWindow):
         self.startStopButton.setText("Stop")
         self.feedLabel.setText("Live Feed")
         self.boxLabel.setText("Nothing")
-        self.gazeNumber.setText(self.setFaceNum())
 
         #Connect Buttons to their respective methods
         self.startStopButton.clicked.connect(self.stop)
@@ -182,8 +181,9 @@ class VideoWindow(QMainWindow):
 
     def setFaceNum(self):
         numFaces = len(grab_faces(self.cap.read()[1]))
-        self.gazeNumber.setText("Number of Gazes: %d / %d" % (0, numFaces))
-        return "Number of Gazes: %d / %d" % (0, numFaces)
+        # TODO: Replace zero with actual number of gazes
+        text = "Number of Gazes: %d / %d" % (0, numFaces)
+        self.gazeNumber.setText(text)
 
     @staticmethod
     def convertQImageToMat(qImage):

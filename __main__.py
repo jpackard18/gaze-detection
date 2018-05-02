@@ -1,11 +1,16 @@
 import sys
 import PyQt5
 from gui import *
+from data_loader import load
+from initwork import Initwork
 
 
 app = PyQt5.QtWidgets.QApplication(sys.argv)
 
-window = VideoWindow()
+data = load('output_network.pkl')
+network = Initwork(data['weights'], data['biases'])
+
+window = VideoWindow(network)
 window.setWindowTitle("Gaze Detection V 0.1.1")
 window.show()
 

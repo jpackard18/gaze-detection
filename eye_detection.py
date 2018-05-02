@@ -22,6 +22,12 @@ class Eye:
 
 
 def detect_eyes(img, draw_rects=False):
+    """
+    Returns the original image and the rectangles that enclose the eyes
+    :param img:
+    :param draw_rects:
+    :return:
+    """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = FACE_CASCADE.detectMultiScale(gray, 1.2, 5)
     eyes_rect = []
@@ -39,7 +45,28 @@ def detect_eyes(img, draw_rects=False):
     return img, eyes_rect
 
 
+def detect_eyes_multi(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    face_rects = FACE_CASCADE.detectMultiScale(gray, 1.2, 5)
+    face_results = []
+    for (x, y, w, h) in face_rects[:MAX_FACES]:
+        eye_results = []
+        roi_color = img[y:y + h, x:x + w]
+        roi_gray = gray[y:y+h, x:x+w]
+        eye_rects = EYE_CASCADE.detectMultiScale(roi_gray, 1.3, 4)
+        for (ex, ey, ew, eh) in eye_rects[:MAX_EYES_PER_FACE]:
+            eye_results.append(Eye(ex + x, ey + y, ew, eh))
+            cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
+        face_results.append(eye_results)
+    return img, gray, face_results
+
+
 def grab_eyes(img):
+    """
+    Returns the eyes in an image as a 2d array of pixels
+    :param img:
+    :return:
+    """
     img, eyes_rect = detect_eyes(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # cv2.imshow("eye", img)

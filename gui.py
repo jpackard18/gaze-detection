@@ -7,7 +7,9 @@ import numpy as np
 import cv2
 
 from camera import *
-from eye_detection import detect_eyes, grab_eyes, grab_faces
+from eye_detection import detect_eyes_multi, grab_eyes, grab_faces
+from initwork import Initwork
+import time
 
 KEEPASPECTRATIOPLEASE = 1
 
@@ -16,9 +18,11 @@ videoWindowSize = 0
 
 class EyeDetectionWorker(QThread):
 
-    def __init__(self, cap, imageLabelDisplay, window):
+    def __init__(self, cap, network, imageLabelDisplay, window):
         QThread.__init__(self)
         self.cap = cap
+        # Neural Network
+        self.network = network
         self.imageLabelDisplay = imageLabelDisplay
         self.window = window
         self.stopped = False
@@ -35,14 +39,16 @@ class EyeDetectionWorker(QThread):
         while not self.stopped:
             start_time = time.time()
             ret, frame = self.cap.read()
-            result_img, eyes = detect_eyes(frame, draw_rects=True)
-            #print(eyes)
-            qImage = VideoWindow.convertMatToQImage(result_img)
+            img_with_rects, img_gray, faces = detect_eyes_multi(frame)
+            results = self.network.evaluate(img_gray, faces)
+            print(results)
+            num_faces_looking = sum([int(round(res) == 1) for res in results])
+            qImage = VideoWindow.convertMatToQImage(img_with_rects)
             self.imageLabelDisplay.setPixmap(QPixmap.fromImage(qImage))
             self.imageLabelDisplay.show()
             time_delta = time.time() - start_time
-            self.window.setFaceNum()
-            print("Time taken for eye detection: " + str(time_delta))
+            self.window.setFaceNum(num_faces_looking)
+            # print("Time taken for eye detection: " + str(time_delta))
         self.quit()
 
 
@@ -58,7 +64,7 @@ class VideoWindow(QMainWindow):
         self.close()
 
 
-    def __init__(self, parent=None):
+    def __init__(self, network, parent=None):
         super(VideoWindow, self).__init__(parent)
 
         self.resize(1000, 600)
@@ -125,7 +131,7 @@ class VideoWindow(QMainWindow):
         central_widget.setLayout(main_layout)
 
         #automatically capture stills
-        self.worker = EyeDetectionWorker(self.cap, self.imageLabel, self)
+        self.worker = EyeDetectionWorker(self.cap, network, self.imageLabel, self)
         self.worker.start()
 
     # starts both the gif and the video feed
@@ -177,12 +183,10 @@ class VideoWindow(QMainWindow):
     def rightShift(self):
         self.capture_img(True)
 
-
-
-    def setFaceNum(self):
+    def setFaceNum(self, num_looking):
         numFaces = len(grab_faces(self.cap.read()[1]))
         # TODO: Replace zero with actual number of gazes
-        text = "Number of Gazes: %d / %d" % (0, numFaces)
+        text = "Number of Gazes: %d / %d" % (num_looking, numFaces)
         self.gazeNumber.setText(text)
 
     @staticmethod
